@@ -1,25 +1,29 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# Name: Setup GNU/Linux to Projeto Pescar Procempa
+# Name: Setup GNU/Linux machine to Projeto Pescar Procempa
 # Author: Jonatha Daguerre Vasconcelos <jonatha@daguerre.com.br>
-# Version: 3.2 (12 Jun 2017)
-# License: GPL
+# Version: 3.3 (12 Jun 2017)
+# License: MIT
 #
 #
 #
 #                  DESCRIPTION
 #
 # This script sets up the Projeto Pescar Procempa's machines
-# in order to avoid the students to need to do that in their first class.
+# in order to avoid the students to do that in their first class.
+#
+# Customized to Linux Mint 18. 
 #
 # This script should:
 # - Set HTTP_PROXY variables.
 # - Set apt-get proxy.
-# - Install Open SSH Server
-# - Update/Install some packages
+# - Install Open SSH Server.
+# - Update/Install some packages.
+# - Update Firefox profile.
 #
 #              CHANGE HISTORY
-# 3.2 (12 Jun 2017) - Improving log messages and updating script to support Mint 18
+# 3.3 (12 Jun 2017) - Changes license from GPL to MIT. Changed size of Zenity window
+# 3.2 (11 Jun 2017) - Improving log messages and updating script to support Mint 18
 # 3.1.1 (05 Jun 2016) - Removed Proxy information (in order to public the source)
 # 3.1 (05 Jun 2016) - Added again the functions to set proxy to Firefox and Chormium. Added Zenity to display the options sbox
 # 3.0 (25 May 2016) - Refectored all functions. Removed functions to set proxy to Firefox and Chormium
@@ -29,11 +33,14 @@
 # 1.1 (14 May 2015) - Added dialog as default UI
 # 1.0 (08 Jun 2014) - First version
 #
+# TODO (jonathadv): Define a better way to present messages, choose one lang only.
+# FIXME (jonathadv): Improve the way to get BASE_DIR, avoiding the "./" to be used.
+#
 
 # Setting up the global variables
-
 declare -r THIS_SCRIPT_PATH="${0}"
 declare -r BASE_DIR="$(dirname ${THIS_SCRIPT_PATH})"
+declare -r PROPERTIES_FILE='setup_pescar_machine.properties'
 
 # pt-BR messages
 declare -r MESSAGE_SETTING_USER_PROFILE='Configurando proxy para o usuário'
@@ -51,10 +58,10 @@ declare -r DIALOG_OPT_BROWSER_PROXY='Proxy_Browsers'
 declare -r DIALOG_OPT_UPDATE='Atualizar_Sistema'
 
 # Proxy variables
-declare -r PROXY_URL=''
-declare -r PROXY_PORT='3128'
-declare -r NO_PROXY=''
-declare -r PROXY="$PROXY_URL:$PROXY_PORT"
+declare    PROXY_URL=''
+declare    PROXY_PORT=''
+declare    NO_PROXY=''
+declare    PROXY='' #"$PROXY_URL:$PROXY_PORT"
 
 # Temp log file definition
 declare -r TMP_LOG_FILE="/tmp/pescar_tmp_$(date +%s).log"
@@ -155,6 +162,68 @@ function backup(){
     return ${exit_code}
 }
 
+#######################################
+# Check empty variables
+# Globals:
+#   None
+# Arguments:
+#   name: The variable name
+#   value: The variable value
+# Returns:
+#   None
+#######################################
+function check_empty(){
+    local name="${1}"
+    local value="${2}"
+    
+    if [[ -z "${value}" ]]; then
+        logger "Variable ${name} is empty! Exiting script."
+        exit 1
+    fi
+}
+
+#######################################
+# Read property file
+# Globals:
+#   BASE_DIR
+#   PROXY_URL
+#   PROXY_PORT
+#   PROXY
+#   PROPERTIES_FILE
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+function load_properties_file(){
+    local prop_file="${BASE_DIR}/${PROPERTIES_FILE}"
+    
+    logger "Loading properties file: ${prop_file}"
+    
+    if [[ ! -f "${prop_file}" ]]; then
+        logger "Propeties file ${prop_file} not found! Creating it with blank values."
+        {
+          echo '# proxy configuration'
+          echo 'proxy_url='
+          echo 'proxy_port='
+          echo 'no_proxy='
+        } > "${prop_file}"
+        
+    else
+        source "${prop_file}"
+    fi
+    
+        
+    PROXY_URL="${proxy_url}"
+    PROXY_PORT="${proxy_port}"
+    NO_PROXY="${no_proxy}"
+    PROXY="$PROXY_URL:$PROXY_PORT"
+    
+    check_empty 'PROXY_URL' "${PROXY_URL}"
+    check_empty 'PROXY_PORT' "${PROXY_PORT}"
+    check_empty 'NO_PROXY' "${NO_PROXY}"
+    check_empty 'PROXY' "${PROXY}"
+}
 
 #######################################
 # Sets the proxy server to APT
@@ -564,6 +633,8 @@ function install_ssh_server(){
 #   None
 #######################################
 function start_set_up(){
+
+    load_properties_file
 
     options=$(zenity  --list  \
             --text "${DIALOG_TITLE}" \
