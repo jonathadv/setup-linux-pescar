@@ -39,7 +39,7 @@
 
 # Setting up the global variables
 declare -r THIS_SCRIPT_PATH="${0}"
-declare -r BASE_DIR="$(dirname ${THIS_SCRIPT_PATH})"
+declare -r BASE_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 declare -r PROPERTIES_FILE='setup_pescar_machine.properties'
 
 # pt-BR messages
