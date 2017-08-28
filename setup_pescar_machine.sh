@@ -34,7 +34,6 @@
 # 1.0 (08 Jun 2014) - First version
 #
 # TODO (jonathadv): Define a better way to present messages, choose one lang only.
-# FIXME (jonathadv): Improve the way to get BASE_DIR, avoiding the "./" to be used.
 #
 
 # Setting up the global variables
