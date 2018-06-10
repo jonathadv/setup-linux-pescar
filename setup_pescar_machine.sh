@@ -2,7 +2,7 @@
 #
 # Name: Setup GNU/Linux machine to Projeto Pescar Procempa
 # Author: Jonatha Daguerre Vasconcelos <jonatha@daguerre.com.br>
-# Version: 3.3 (12 Jun 2017)
+# Version: 3.4 (10 Jun 2018)
 # License: MIT
 #
 #
@@ -12,7 +12,7 @@
 # This script sets up the Projeto Pescar Procempa's machines
 # in order to avoid the students to do that in their first class.
 #
-# Customized to Linux Mint 18. 
+# Customized to Linux Mint 18.
 #
 # This script should:
 # - Set HTTP_PROXY variables.
@@ -22,6 +22,7 @@
 # - Update Firefox profile.
 #
 #              CHANGE HISTORY
+# 3.4 (10 Jun 2018) - Changes menu options order to allow the system update run first
 # 3.3 (12 Jun 2017) - Changes license from GPL to MIT. Changed size of Zenity window
 # 3.2 (11 Jun 2017) - Improving log messages and updating script to support Mint 18
 # 3.1.1 (05 Jun 2016) - Removed Proxy information (in order to public the source)
@@ -174,7 +175,7 @@ function backup(){
 function check_empty(){
     local name="${1}"
     local value="${2}"
-    
+
     if [[ -z "${value}" ]]; then
         logger "Variable ${name} is empty! Exiting script."
         exit 1
@@ -196,9 +197,9 @@ function check_empty(){
 #######################################
 function load_properties_file(){
     local prop_file="${BASE_DIR}/${PROPERTIES_FILE}"
-    
+
     logger "Loading properties file: ${prop_file}"
-    
+
     if [[ ! -f "${prop_file}" ]]; then
         logger "Propeties file ${prop_file} not found! Creating it with blank values."
         {
@@ -207,17 +208,17 @@ function load_properties_file(){
           echo 'proxy_port='
           echo 'no_proxy='
         } > "${prop_file}"
-        
+
     else
         source "${prop_file}"
     fi
-    
-        
+
+
     PROXY_URL="${proxy_url}"
     PROXY_PORT="${proxy_port}"
     NO_PROXY="${no_proxy}"
     PROXY="$PROXY_URL:$PROXY_PORT"
-    
+
     check_empty 'PROXY_URL' "${PROXY_URL}"
     check_empty 'PROXY_PORT' "${PROXY_PORT}"
     check_empty 'NO_PROXY' "${NO_PROXY}"
@@ -319,7 +320,7 @@ function configure_firefox_profile(){
     local firefox_profile_basedir="${pescar_profile}/.mozilla/firefox"
     local default_pescar_profile_dir='default_pescar_profile'
     local current_firefox_profile_name=''
-    
+
     cd "${BASE_DIR}"
 
     print_header 'Configure Firefox profile'
@@ -337,7 +338,7 @@ function configure_firefox_profile(){
         cd "${firefox_profile_basedir}"
         tar -zxf "${tar_file}"
         rm -rf "${current_firefox_profile_name}"
-        
+
         mv "${default_pescar_profile_dir}" "${current_firefox_profile_name}"
         chown -R pescar.pescar "${current_firefox_profile_name}"
         rm -f "${tar_file}"
@@ -374,7 +375,7 @@ function update_system() {
     backup "${apt_target_basedir}/apt"
     rm -rf "${apt_target_basedir}/apt"
 
-    logger "Copying installation files from \"${BASE_DIR}/${tar_file}\" to \"${apt_target_basedir}\"" 
+    logger "Copying installation files from \"${BASE_DIR}/${tar_file}\" to \"${apt_target_basedir}\""
     cp -f "${BASE_DIR}/${tar_file}" "${apt_target_basedir}"
     logger 'Copy done.'
 
@@ -388,11 +389,11 @@ function update_system() {
     fi
 
     if ${run_apt_update}; then
-       run_apt_get_update       
+       run_apt_get_update
     fi
- 
+
     configure_firefox_profile
- 
+
     add_root_to_ssh
 
     print_line
@@ -447,7 +448,7 @@ function set_proxy_to_chromium(){
   local chromium_bin="${chromium}-bin"
 
   print_header 'Set proxy to Chromium'
-    
+
   if [[ ! -f "${chromium}" ]]; then
     logger "Chromiun Browser not found. Skipping proxy configuration."
     return 1
@@ -455,7 +456,7 @@ function set_proxy_to_chromium(){
 
   backup "${chromium}"
   mv "${chromium}" "${chromium_bin}"
-  
+
   {
       echo "#!/bin/bash"
       echo -e "\n\n"
@@ -640,10 +641,10 @@ function start_set_up(){
             --checklist  \
             --column "[X]" \
             --column "${DIALOG_OPTIONS}" \
+            FALSE "${DIALOG_OPT_UPDATE}" \
             TRUE "${DIALOG_OPT_PROXY_SYSTEM}" \
             TRUE "${DIALOG_OPT_PROXY_APT}" \
             TRUE "${DIALOG_OPT_BROWSER_PROXY}" \
-            FALSE "${DIALOG_OPT_UPDATE}" \
             --height 300)
 
     options="$(tr '|' ' ' <<< ${options})"
@@ -693,7 +694,7 @@ function start_set_up(){
 # Returns:
 #   None
 #######################################
-function main(){ 
+function main(){
     local time_to_wait=30
 
     if [[ "$(id -u)" == "0" ]]; then

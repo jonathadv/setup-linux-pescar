@@ -13,6 +13,7 @@
 # - Update Firefox profile.
 #
 #              CHANGE HISTORY
+# 3.4 (10 Jun 2018) - Changes menu options order to allow the system update run first
 # 3.3 (12 Jun 2017) - Changes license from GPL to MIT. Changed size of Zenity window
 # 3.2 (11 Jun 2017) - Improving log messages and updating script to support Mint 18
 # 3.1.1 (05 Jun 2016) - Removed Proxy information (in order to public the source)
